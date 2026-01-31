@@ -5,6 +5,9 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\RenewalController;
 use App\Http\Controllers\SettingsController;
+use App\Http\Controllers\CarTypeController;
+use App\Http\Controllers\ExtensionController;
+use App\Http\Controllers\EventPackageController;
 
 // Authentication
 Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
@@ -31,8 +34,12 @@ Route::middleware(['auth'])->group(function () {
         return view('telesales.upgrade.index');
     })->name('telesales.upgrade.index');
 
-    // Settings
-    Route::prefix('settings')->name('settings.')->group(function () {
+    // ============================================
+    // TELESALES EVENT SETUP
+    // ============================================
+    
+    // Events (renamed from settings)
+    Route::prefix('events')->name('settings.')->group(function () {
         Route::get('/', [SettingsController::class, 'index'])->name('index');
         Route::get('/create', [SettingsController::class, 'create'])->name('create');
         Route::post('/', [SettingsController::class, 'store'])->name('store');
@@ -40,5 +47,38 @@ Route::middleware(['auth'])->group(function () {
         Route::put('/{event}', [SettingsController::class, 'update'])->name('update');
         Route::delete('/{event}', [SettingsController::class, 'destroy'])->name('destroy');
         Route::patch('/{event}/toggle-status', [SettingsController::class, 'toggleStatus'])->name('toggle-status');
+    });
+
+    // Event Packages
+    Route::prefix('events/{event}/packages')->name('events.packages.')->group(function () {
+        Route::get('/', [EventPackageController::class, 'index'])->name('index');
+        Route::get('/create', [EventPackageController::class, 'create'])->name('create');
+        Route::post('/', [EventPackageController::class, 'store'])->name('store');
+        Route::get('/{package}/edit', [EventPackageController::class, 'edit'])->name('edit');
+        Route::put('/{package}', [EventPackageController::class, 'update'])->name('update');
+        Route::delete('/{package}', [EventPackageController::class, 'destroy'])->name('destroy');
+        Route::patch('/{package}/toggle-status', [EventPackageController::class, 'toggleStatus'])->name('toggle-status');
+    });
+
+    // Car Types
+    Route::prefix('car-types')->name('car-types.')->group(function () {
+        Route::get('/', [CarTypeController::class, 'index'])->name('index');
+        Route::get('/create', [CarTypeController::class, 'create'])->name('create');
+        Route::post('/', [CarTypeController::class, 'store'])->name('store');
+        Route::get('/{carType}/edit', [CarTypeController::class, 'edit'])->name('edit');
+        Route::put('/{carType}', [CarTypeController::class, 'update'])->name('update');
+        Route::delete('/{carType}', [CarTypeController::class, 'destroy'])->name('destroy');
+        Route::patch('/{carType}/toggle-status', [CarTypeController::class, 'toggleStatus'])->name('toggle-status');
+    });
+
+    // Extensions
+    Route::prefix('extensions')->name('extensions.')->group(function () {
+        Route::get('/', [ExtensionController::class, 'index'])->name('index');
+        Route::get('/create', [ExtensionController::class, 'create'])->name('create');
+        Route::post('/', [ExtensionController::class, 'store'])->name('store');
+        Route::get('/{extension}/edit', [ExtensionController::class, 'edit'])->name('edit');
+        Route::put('/{extension}', [ExtensionController::class, 'update'])->name('update');
+        Route::delete('/{extension}', [ExtensionController::class, 'destroy'])->name('destroy');
+        Route::patch('/{extension}/toggle-status', [ExtensionController::class, 'toggleStatus'])->name('toggle-status');
     });
 });

@@ -12,17 +12,17 @@
         body { min-height: 100vh; background-color: #f8f9fa; }
         .sidebar { position: fixed; top: 0; left: 0; width: var(--sidebar-width); height: 100vh; background: var(--sidebar-bg); z-index: 1000; overflow-y: auto; }
         .sidebar-header { height: var(--header-height); display: flex; align-items: center; padding: 0 1rem; border-bottom: 1px solid rgba(255,255,255,0.1); }
-        .sidebar-logo { color: #fff; font-weight: 600; font-size: 1.2rem; text-decoration: none; display: flex; align-items: center; gap: 0.75rem; }
+        .sidebar-logo { color: #fff; font-weight: 600; font-size: 1.1rem; text-decoration: none; display: flex; align-items: center; gap: 0.75rem; }
         .sidebar-logo i { font-size: 1.5rem; }
         .sidebar-menu { padding: 1rem 0; }
-        .menu-label { color: rgba(255,255,255,0.5); font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.5px; padding: 0.75rem 1rem 0.5rem; margin-top: 0.5rem; }
+        .menu-label { color: rgba(255,255,255,0.5); font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.5px; padding: 0.75rem 1rem 0.5rem; margin-top: 0.5rem; }
         .nav-item { margin: 2px 8px; }
-        .nav-link { color: rgba(255,255,255,0.8); padding: 0.65rem 1rem; border-radius: 6px; display: flex; align-items: center; gap: 0.75rem; transition: all 0.2s; text-decoration: none; }
+        .nav-link { color: rgba(255,255,255,0.8); padding: 0.6rem 1rem; border-radius: 6px; display: flex; align-items: center; gap: 0.75rem; transition: all 0.2s; text-decoration: none; font-size: 0.9rem; }
         .nav-link:hover, .nav-link.active { color: #fff; background: var(--sidebar-hover); }
         .nav-link.active { background: #0d6efd; }
-        .nav-link i { font-size: 1.1rem; width: 24px; text-align: center; }
-        .nav-submenu { padding-left: 2.5rem; }
-        .nav-submenu .nav-link { padding: 0.5rem 1rem; font-size: 0.9rem; }
+        .nav-link i { font-size: 1rem; width: 20px; text-align: center; }
+        .nav-submenu { margin-left: 1rem; border-left: 1px solid rgba(255,255,255,0.1); padding-left: 0.5rem; }
+        .nav-submenu .nav-link { padding: 0.4rem 0.75rem; font-size: 0.85rem; }
         .main-content { margin-left: var(--sidebar-width); }
         .main-header { height: var(--header-height); background: #fff; border-bottom: 1px solid #dee2e6; display: flex; align-items: center; justify-content: space-between; padding: 0 1.5rem; position: sticky; top: 0; z-index: 100; }
         .page-content { padding: 1.5rem; }
@@ -41,12 +41,15 @@
         </div>
         <nav class="sidebar-menu">
             <ul class="nav flex-column">
+                <!-- Dashboard -->
                 <li class="nav-item">
                     <a href="{{ route('dashboard') }}" class="nav-link {{ request()->routeIs('dashboard') ? 'active' : '' }}">
                         <i class="bi bi-speedometer2"></i>
                         <span>Dashboard</span>
                     </a>
                 </li>
+
+                <!-- Telesales -->
                 <div class="menu-label">Telesales</div>
                 <li class="nav-item">
                     <a href="{{ route('telesales.renewal.index') }}" class="nav-link {{ request()->routeIs('telesales.renewal.*') ? 'active' : '' }}">
@@ -60,11 +63,25 @@
                         <span>Upgrade</span>
                     </a>
                 </li>
-                <div class="menu-label">Configuration</div>
+
+                <!-- Telesales Event Setup -->
+                <div class="menu-label">Telesales Event Setup</div>
                 <li class="nav-item">
-                    <a href="{{ route('settings.index') }}" class="nav-link {{ request()->routeIs('settings.*') ? 'active' : '' }}">
-                        <i class="bi bi-gear"></i>
-                        <span>Event Setup</span>
+                    <a href="{{ route('settings.index') }}" class="nav-link {{ request()->routeIs('settings.*') || request()->routeIs('events.packages.*') ? 'active' : '' }}">
+                        <i class="bi bi-calendar-event"></i>
+                        <span>Events</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="{{ route('car-types.index') }}" class="nav-link {{ request()->routeIs('car-types.*') ? 'active' : '' }}">
+                        <i class="bi bi-car-front"></i>
+                        <span>Car Types</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="{{ route('extensions.index') }}" class="nav-link {{ request()->routeIs('extensions.*') ? 'active' : '' }}">
+                        <i class="bi bi-shield-plus"></i>
+                        <span>Extensions</span>
                     </a>
                 </li>
             </ul>

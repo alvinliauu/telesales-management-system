@@ -10,6 +10,7 @@ use App\Imports\RenewalDataImport;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
 use Maatwebsite\Excel\Facades\Excel;
 
 class RenewalController extends Controller
@@ -86,9 +87,9 @@ class RenewalController extends Controller
         ]);
 
         try {
-            $path = $file->store('uploads/renewal');
+            // Import directly from the uploaded file (no need to store first)
             $import = new RenewalDataImport($event->id, $uploadLog->id);
-            Excel::import($import, storage_path('app/' . $path));
+            Excel::import($import, $file);
 
             $uploadLog->update([
                 'total_rows' => $import->getRowCount(),

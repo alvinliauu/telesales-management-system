@@ -46,6 +46,16 @@ class RenewalEvent extends Model
         return $this->hasMany(UploadLog::class);
     }
 
+    public function packages()
+    {
+        return $this->hasMany(EventPackage::class);
+    }
+
+    public function carTypes()
+    {
+        return $this->belongsToMany(CarType::class, 'event_car_types');
+    }
+
     public function getMonthNameAttribute(): string
     {
         return date('F', mktime(0, 0, 0, $this->month, 1));
