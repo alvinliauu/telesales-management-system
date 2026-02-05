@@ -8,27 +8,32 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
     <style>
-        :root { --sidebar-width: 260px; --header-height: 60px; --sidebar-bg: #212529; --sidebar-hover: #343a40; }
-        body { min-height: 100vh; background-color: #f8f9fa; }
+        :root { --sidebar-width: 260px; --header-height: 60px; --sidebar-bg: #1a1a1a; --sidebar-hover: #2d2d2d; }
+        body { min-height: 100vh; background-color: #f5f5f5; }
         .sidebar { position: fixed; top: 0; left: 0; width: var(--sidebar-width); height: 100vh; background: var(--sidebar-bg); z-index: 1000; overflow-y: auto; }
         .sidebar-header { height: var(--header-height); display: flex; align-items: center; padding: 0 1rem; border-bottom: 1px solid rgba(255,255,255,0.1); }
         .sidebar-logo { color: #fff; font-weight: 600; font-size: 1.1rem; text-decoration: none; display: flex; align-items: center; gap: 0.75rem; }
         .sidebar-logo i { font-size: 1.5rem; }
         .sidebar-menu { padding: 1rem 0; }
-        .menu-label { color: rgba(255,255,255,0.5); font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.5px; padding: 0.75rem 1rem 0.5rem; margin-top: 0.5rem; }
+        .menu-label { color: rgba(255,255,255,0.4); font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.5px; padding: 0.75rem 1rem 0.5rem; margin-top: 0.5rem; }
         .nav-item { margin: 2px 8px; }
-        .nav-link { color: rgba(255,255,255,0.8); padding: 0.6rem 1rem; border-radius: 6px; display: flex; align-items: center; gap: 0.75rem; transition: all 0.2s; text-decoration: none; font-size: 0.9rem; }
+        .nav-link { color: rgba(255,255,255,0.7); padding: 0.6rem 1rem; border-radius: 6px; display: flex; align-items: center; gap: 0.75rem; transition: all 0.2s; text-decoration: none; font-size: 0.9rem; }
         .nav-link:hover, .nav-link.active { color: #fff; background: var(--sidebar-hover); }
-        .nav-link.active { background: #0d6efd; }
+        .nav-link.active { background: #333; }
         .nav-link i { font-size: 1rem; width: 20px; text-align: center; }
-        .nav-submenu { margin-left: 1rem; border-left: 1px solid rgba(255,255,255,0.1); padding-left: 0.5rem; }
-        .nav-submenu .nav-link { padding: 0.4rem 0.75rem; font-size: 0.85rem; }
         .main-content { margin-left: var(--sidebar-width); }
-        .main-header { height: var(--header-height); background: #fff; border-bottom: 1px solid #dee2e6; display: flex; align-items: center; justify-content: space-between; padding: 0 1.5rem; position: sticky; top: 0; z-index: 100; }
+        .main-header { height: var(--header-height); background: #fff; border-bottom: 1px solid #e0e0e0; display: flex; align-items: center; justify-content: space-between; padding: 0 1.5rem; position: sticky; top: 0; z-index: 100; }
         .page-content { padding: 1.5rem; }
-        .stat-card { border: none; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.08); }
-        .stat-icon { width: 48px; height: 48px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; }
-        .table-hover tbody tr:hover { background-color: rgba(13, 110, 253, 0.05); }
+        .stat-card { border: none; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.08); background: #fff; }
+        .stat-icon { width: 48px; height: 48px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 1.25rem; }
+        .table-hover tbody tr:hover { background-color: #f9f9f9; }
+        .btn-dark { background-color: #333; border-color: #333; }
+        .btn-dark:hover { background-color: #1a1a1a; border-color: #1a1a1a; }
+        .btn-outline-dark { color: #333; border-color: #333; }
+        .btn-outline-dark:hover { background-color: #333; color: #fff; }
+        .badge.bg-dark { background-color: #333 !important; }
+        .badge.bg-secondary { background-color: #6c757d !important; }
+        .badge.bg-light { background-color: #f5f5f5 !important; }
     </style>
 </head>
 <body>
@@ -41,7 +46,6 @@
         </div>
         <nav class="sidebar-menu">
             <ul class="nav flex-column">
-                <!-- Dashboard -->
                 <li class="nav-item">
                     <a href="{{ route('dashboard') }}" class="nav-link {{ request()->routeIs('dashboard') ? 'active' : '' }}">
                         <i class="bi bi-speedometer2"></i>
@@ -49,7 +53,6 @@
                     </a>
                 </li>
 
-                <!-- Telesales -->
                 <div class="menu-label">Telesales</div>
                 <li class="nav-item">
                     <a href="{{ route('telesales.renewal.index') }}" class="nav-link {{ request()->routeIs('telesales.renewal.*') ? 'active' : '' }}">
@@ -64,7 +67,6 @@
                     </a>
                 </li>
 
-                <!-- Telesales Event Setup -->
                 <div class="menu-label">Telesales Event Setup</div>
                 <li class="nav-item">
                     <a href="{{ route('settings.index') }}" class="nav-link {{ request()->routeIs('settings.*') || request()->routeIs('events.packages.*') ? 'active' : '' }}">
@@ -99,7 +101,7 @@
                     <li>
                         <form action="{{ route('logout') }}" method="POST">
                             @csrf
-                            <button type="submit" class="dropdown-item text-danger"><i class="bi bi-box-arrow-right me-2"></i>Logout</button>
+                            <button type="submit" class="dropdown-item"><i class="bi bi-box-arrow-right me-2"></i>Logout</button>
                         </form>
                     </li>
                 </ul>
@@ -107,9 +109,9 @@
         </header>
 
         <main class="page-content">
-            @if(session('success'))<div class="alert alert-success alert-dismissible fade show"><i class="bi bi-check-circle me-2"></i>{{ session('success') }}<button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>@endif
-            @if(session('error'))<div class="alert alert-danger alert-dismissible fade show"><i class="bi bi-exclamation-triangle me-2"></i>{{ session('error') }}<button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>@endif
-            @if(session('info'))<div class="alert alert-info alert-dismissible fade show"><i class="bi bi-info-circle me-2"></i>{{ session('info') }}<button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>@endif
+            @if(session('success'))<div class="alert alert-dark alert-dismissible fade show"><i class="bi bi-check-circle me-2"></i>{{ session('success') }}<button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>@endif
+            @if(session('error'))<div class="alert alert-secondary alert-dismissible fade show"><i class="bi bi-exclamation-triangle me-2"></i>{{ session('error') }}<button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>@endif
+            @if(session('info'))<div class="alert alert-light alert-dismissible fade show border"><i class="bi bi-info-circle me-2"></i>{{ session('info') }}<button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>@endif
             @yield('content')
         </main>
     </div>

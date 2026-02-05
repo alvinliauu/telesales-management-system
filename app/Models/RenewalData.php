@@ -13,45 +13,41 @@ class RenewalData extends Model
 
     protected $fillable = [
         'renewal_event_id',
-        'no_kontrak',
-        'ano',
-        'end_date',
-        'nama_tertanggung',
-        'merk',
-        'tipe',
-        'tahun_kendaraan',
-        'nilai_pertanggungan',
-        'premi_comprehensive',
-        'premi_tlo',
-        'premi_comprehensive_extended',
+        'upload_log_id',
         'no_polis',
-        'wilayah',
-        'jumlah_klaim',
-        'tahun_renewal',
-        'jaminan_existing',
-        'no_telepon',
+        'no_kontrak',
+        'nama_tertanggung',
+        'no_hp',
         'email',
-        'call_status',
-        'call_notes',
-        'last_call_at',
-        'callback_at',
-        'selected_package',
-        'agreed_premium',
-        'assigned_to',
-        'last_called_by',
+        'ano',
+        'merk_kendaraan',
+        'tahun_kendaraan',
+        'jenis_coverage',
+        'tsi',
+        'premi',
+        'start_date',
+        'end_date',
+        'agent',
+        'cabang',
+        'raw_data',
+        // Partner fields
+        'partner_status',
+        'partner_request_id',
+        'partner_error_message',
+        'partner_error_code',
+        'partner_sent_at',
+        'partner_retry_count',
     ];
 
     protected function casts(): array
     {
         return [
+            'start_date' => 'date',
             'end_date' => 'date',
-            'nilai_pertanggungan' => 'decimal:2',
-            'premi_comprehensive' => 'decimal:2',
-            'premi_tlo' => 'decimal:2',
-            'premi_comprehensive_extended' => 'decimal:2',
-            'agreed_premium' => 'decimal:2',
-            'last_call_at' => 'datetime',
-            'callback_at' => 'datetime',
+            'tsi' => 'decimal:2',
+            'premi' => 'decimal:2',
+            'raw_data' => 'array',
+            'partner_sent_at' => 'datetime',
         ];
     }
 
@@ -60,48 +56,23 @@ class RenewalData extends Model
         return $this->belongsTo(RenewalEvent::class);
     }
 
-    public function assignedUser()
+    public function uploadLog()
     {
-        return $this->belongsTo(User::class, 'assigned_to');
+        return $this->belongsTo(UploadLog::class);
     }
 
-    public function lastCalledByUser()
+    public function scopePendingPartner($query)
     {
-        return $this->belongsTo(User::class, 'last_called_by');
+        return $query->where('partner_status', 'pending');
     }
 
-    public function callHistories()
+    public function scopeFailedPartner($query)
     {
-        return $this->hasMany(CallHistory::class);
+        return $query->where('partner_status', 'failed');
     }
 
-    public function getStatusBadgeAttribute(): string
+    public function scopeSuccessPartner($query)
     {
-        return match($this->call_status) {
-            'pending' => 'secondary',
-            'called' => 'info',
-            'no_answer' => 'warning',
-            'callback' => 'primary',
-            'interested' => 'info',
-            'renewed' => 'success',
-            'declined' => 'danger',
-            'invalid_contact' => 'dark',
-            default => 'secondary',
-        };
-    }
-
-    public function getStatusLabelAttribute(): string
-    {
-        return match($this->call_status) {
-            'pending' => 'Pending',
-            'called' => 'Called',
-            'no_answer' => 'No Answer',
-            'callback' => 'Callback',
-            'interested' => 'Interested',
-            'renewed' => 'Renewed',
-            'declined' => 'Declined',
-            'invalid_contact' => 'Invalid Contact',
-            default => ucfirst($this->call_status),
-        };
+        return $query->where('partner_status', 'success');
     }
 }

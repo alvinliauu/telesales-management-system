@@ -2,9 +2,9 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\RenewalEvent;
 use App\Models\RenewalData;
-use App\Models\CallHistory;
+use App\Models\RenewalEvent;
+use App\Services\PartnerService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -12,44 +12,69 @@ class DashboardController extends Controller
 {
     public function index()
     {
+        // Get active events
         $activeEvents = RenewalEvent::where('status', 'active')->get();
-        
-        $stats = [
-            'total_events' => RenewalEvent::count(),
-            'active_events' => RenewalEvent::where('status', 'active')->count(),
-            'total_data' => RenewalData::count(),
-            'pending_calls' => RenewalData::where('call_status', 'pending')->count(),
-            'renewed_today' => RenewalData::where('call_status', 'renewed')
-                                          ->whereDate('updated_at', today())
-                                          ->count(),
-            'calls_today' => CallHistory::whereDate('called_at', today())->count(),
+
+        // Partner submission statistics
+        $partnerStats = [
+            'pending' => RenewalData::where('partner_status', 'pending')->count(),
+            'queued' => RenewalData::where('partner_status', 'queued')->count(),
+            'success' => RenewalData::where('partner_status', 'success')->count(),
+            'failed' => RenewalData::where('partner_status', 'failed')->count(),
         ];
 
-        $statusBreakdown = RenewalData::whereHas('renewalEvent', function($q) {
-                $q->where('status', 'active');
-            })
-            ->select('call_status', DB::raw('count(*) as count'))
-            ->groupBy('call_status')
-            ->pluck('count', 'call_status')
-            ->toArray();
+        // Failed submissions grouped by error code
+        $failedByError = RenewalData::where('partner_status', 'failed')
+            ->select('partner_error_code', 'partner_error_message', DB::raw('count(*) as total'))
+            ->groupBy('partner_error_code', 'partner_error_message')
+            ->orderBy('total', 'desc')
+            ->get()
+            ->map(function ($item) {
+                return [
+                    'error_code' => $item->partner_error_code,
+                    'error_message' => $item->partner_error_message,
+                    'total' => $item->total,
+                ];
+            });
 
-        $recentCalls = CallHistory::with(['renewalData', 'calledByUser'])
-            ->latest('called_at')
-            ->take(10)
+        // Recent successful submissions
+        $recentSuccess = RenewalData::where('partner_status', 'success')
+            ->orderBy('partner_sent_at', 'desc')
+            ->limit(10)
             ->get();
 
-        $callbacksToday = RenewalData::with('renewalEvent')
-            ->where('call_status', 'callback')
-            ->whereDate('callback_at', today())
-            ->take(10)
+        // Recent failed submissions
+        $recentFailed = RenewalData::where('partner_status', 'failed')
+            ->orderBy('updated_at', 'desc')
+            ->limit(10)
             ->get();
 
-        return view('dashboard.index', compact(
+        // Check if sending is currently allowed
+        $partnerService = new PartnerService();
+        $sendingAllowed = $partnerService->isSendingAllowed();
+
+        // Event statistics
+        $eventStats = RenewalEvent::where('status', 'active')
+            ->withCount(['renewalData as total_data'])
+            ->withCount(['renewalData as success_count' => function ($query) {
+                $query->where('partner_status', 'success');
+            }])
+            ->withCount(['renewalData as failed_count' => function ($query) {
+                $query->where('partner_status', 'failed');
+            }])
+            ->withCount(['renewalData as pending_count' => function ($query) {
+                $query->where('partner_status', 'pending');
+            }])
+            ->get();
+
+        return view('dashboard', compact(
             'activeEvents',
-            'stats',
-            'statusBreakdown',
-            'recentCalls',
-            'callbacksToday'
+            'partnerStats',
+            'failedByError',
+            'recentSuccess',
+            'recentFailed',
+            'sendingAllowed',
+            'eventStats'
         ));
     }
 }

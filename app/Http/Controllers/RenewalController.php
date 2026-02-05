@@ -4,13 +4,10 @@ namespace App\Http\Controllers;
 
 use App\Models\RenewalEvent;
 use App\Models\RenewalData;
-use App\Models\CallHistory;
 use App\Models\UploadLog;
 use App\Imports\RenewalDataImport;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Storage;
 use Maatwebsite\Excel\Facades\Excel;
 
 class RenewalController extends Controller
@@ -25,23 +22,27 @@ class RenewalController extends Controller
         $selectedEventId = $request->get('event_id', $events->first()?->id);
         $selectedEvent = RenewalEvent::find($selectedEventId);
 
-        $query = RenewalData::with(['renewalEvent', 'assignedUser', 'lastCalledByUser'])
+        $query = RenewalData::with(['renewalEvent'])
             ->when($selectedEventId, fn($q) => $q->where('renewal_event_id', $selectedEventId));
 
-        if ($request->filled('status')) {
-            $query->where('call_status', $request->status);
+        // Partner status filter
+        if ($request->filled('partner_status')) {
+            $query->where('partner_status', $request->partner_status);
         }
+
+        // Search filter
         if ($request->filled('search')) {
             $search = $request->search;
             $query->where(function($q) use ($search) {
                 $q->where('nama_tertanggung', 'like', "%{$search}%")
                   ->orWhere('no_kontrak', 'like', "%{$search}%")
                   ->orWhere('no_polis', 'like', "%{$search}%")
-                  ->orWhere('ano', 'like', "%{$search}%");
+                  ->orWhere('ano', 'like', "%{$search}%")
+                  ->orWhere('partner_request_id', 'like', "%{$search}%");
             });
         }
 
-        $renewals = $query->orderBy('end_date', 'asc')->paginate(25);
+        $renewals = $query->orderBy('created_at', 'desc')->paginate(25);
         $statistics = $selectedEvent ? $this->getEventStatistics($selectedEventId) : null;
 
         return view('telesales.renewal.index', compact(
@@ -87,7 +88,6 @@ class RenewalController extends Controller
         ]);
 
         try {
-            // Import directly from the uploaded file (no need to store first)
             $import = new RenewalDataImport($event->id, $uploadLog->id);
             Excel::import($import, $file);
 
@@ -114,87 +114,8 @@ class RenewalController extends Controller
 
     public function show(RenewalData $renewal)
     {
-        $renewal->load(['renewalEvent', 'assignedUser', 'callHistories.calledByUser']);
+        $renewal->load(['renewalEvent']);
         return view('telesales.renewal.show', compact('renewal'));
-    }
-
-    public function updateCall(Request $request, RenewalData $renewal)
-    {
-        $request->validate([
-            'result' => 'required|in:answered,no_answer,busy,voicemail,wrong_number,callback_requested,interested,renewed,declined',
-            'notes' => 'nullable|string|max:1000',
-            'callback_date' => 'nullable|date|after:now',
-            'selected_package' => 'nullable|string',
-            'agreed_premium' => 'nullable|numeric|min:0',
-        ]);
-
-        DB::transaction(function() use ($request, $renewal) {
-            CallHistory::create([
-                'renewal_data_id' => $renewal->id,
-                'called_by' => Auth::id(),
-                'called_at' => now(),
-                'result' => $request->result,
-                'notes' => $request->notes,
-                'callback_scheduled' => $request->callback_date,
-            ]);
-
-            $statusMap = [
-                'answered' => 'called',
-                'no_answer' => 'no_answer',
-                'busy' => 'no_answer',
-                'voicemail' => 'no_answer',
-                'wrong_number' => 'invalid_contact',
-                'callback_requested' => 'callback',
-                'interested' => 'interested',
-                'renewed' => 'renewed',
-                'declined' => 'declined',
-            ];
-
-            $updateData = [
-                'call_status' => $statusMap[$request->result] ?? 'called',
-                'call_notes' => $request->notes,
-                'last_call_at' => now(),
-                'last_called_by' => Auth::id(),
-            ];
-
-            if ($request->result === 'callback_requested' && $request->callback_date) {
-                $updateData['callback_at'] = $request->callback_date;
-            }
-
-            if ($request->result === 'renewed') {
-                $updateData['selected_package'] = $request->selected_package;
-                $updateData['agreed_premium'] = $request->agreed_premium;
-            }
-
-            $renewal->update($updateData);
-        });
-
-        return back()->with('success', 'Call status updated successfully.');
-    }
-
-    public function nextCall(Request $request)
-    {
-        $eventId = $request->get('event_id');
-
-        $next = RenewalData::when($eventId, fn($q) => $q->where('renewal_event_id', $eventId))
-            ->where(function($q) {
-                $q->where('call_status', 'pending')
-                  ->orWhere(function($q2) {
-                      $q2->where('call_status', 'callback')
-                         ->where('callback_at', '<=', now());
-                  });
-            })
-            ->orderByRaw("CASE WHEN call_status = 'callback' THEN 0 ELSE 1 END")
-            ->orderBy('callback_at', 'asc')
-            ->orderBy('end_date', 'asc')
-            ->first();
-
-        if (!$next) {
-            return redirect()->route('telesales.renewal.index', ['event_id' => $eventId])
-                ->with('info', 'No pending calls available.');
-        }
-
-        return redirect()->route('telesales.renewal.show', $next);
     }
 
     private function getEventStatistics($eventId): array
@@ -203,14 +124,10 @@ class RenewalController extends Controller
         
         return [
             'total' => (clone $data)->count(),
-            'pending' => (clone $data)->where('call_status', 'pending')->count(),
-            'called' => (clone $data)->whereNotIn('call_status', ['pending'])->count(),
-            'renewed' => (clone $data)->where('call_status', 'renewed')->count(),
-            'declined' => (clone $data)->where('call_status', 'declined')->count(),
-            'callback' => (clone $data)->where('call_status', 'callback')->count(),
-            'no_answer' => (clone $data)->where('call_status', 'no_answer')->count(),
-            'interested' => (clone $data)->where('call_status', 'interested')->count(),
-            'total_premium' => (clone $data)->where('call_status', 'renewed')->sum('agreed_premium'),
+            'pending' => (clone $data)->where('partner_status', 'pending')->count(),
+            'queued' => (clone $data)->where('partner_status', 'queued')->count(),
+            'success' => (clone $data)->where('partner_status', 'success')->count(),
+            'failed' => (clone $data)->where('partner_status', 'failed')->count(),
         ];
     }
 }
