@@ -31,9 +31,7 @@
         .btn-dark:hover { background-color: #1a1a1a; border-color: #1a1a1a; }
         .btn-outline-dark { color: #333; border-color: #333; }
         .btn-outline-dark:hover { background-color: #333; color: #fff; }
-        .badge.bg-dark { background-color: #333 !important; }
-        .badge.bg-secondary { background-color: #6c757d !important; }
-        .badge.bg-light { background-color: #f5f5f5 !important; }
+        .role-badge { font-size: 0.65rem; padding: 0.2rem 0.5rem; }
     </style>
 </head>
 <body>
@@ -53,21 +51,41 @@
                     </a>
                 </li>
 
-                <div class="menu-label">Telesales</div>
+                @if(Auth::user()->role === 'underwriter')
+                <div class="menu-label">Underwriter</div>
                 <li class="nav-item">
-                    <a href="{{ route('telesales.renewal.index') }}" class="nav-link {{ request()->routeIs('telesales.renewal.*') ? 'active' : '' }}">
-                        <i class="bi bi-arrow-repeat"></i>
-                        <span>Renewal</span>
+                    <a href="{{ route('data-query.index') }}" class="nav-link {{ request()->routeIs('data-query.*') ? 'active' : '' }}">
+                        <i class="bi bi-database"></i>
+                        <span>Data Query</span>
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a href="{{ route('telesales.upgrade.index') }}" class="nav-link {{ request()->routeIs('telesales.upgrade.*') ? 'active' : '' }}">
-                        <i class="bi bi-arrow-up-circle"></i>
-                        <span>Upgrade</span>
+                    <a href="{{ route('uw-review.index') }}" class="nav-link {{ request()->routeIs('uw-review.*') ? 'active' : '' }}">
+                        <i class="bi bi-clipboard-check"></i>
+                        <span>UW Review</span>
+                    </a>
+                </li>
+                @endif
+
+                @if(Auth::user()->role === 'marketing')
+                <div class="menu-label">Marketing</div>
+                <li class="nav-item">
+                    <a href="{{ route('marketing-review.index') }}" class="nav-link {{ request()->routeIs('marketing-review.*') ? 'active' : '' }}">
+                        <i class="bi bi-send-check"></i>
+                        <span>Marketing Review</span>
+                    </a>
+                </li>
+                @endif
+
+                <div class="menu-label">Data</div>
+                <li class="nav-item">
+                    <a href="{{ route('telesales.renewal.index') }}" class="nav-link {{ request()->routeIs('telesales.renewal.*') ? 'active' : '' }}">
+                        <i class="bi bi-table"></i>
+                        <span>All Renewal Data</span>
                     </a>
                 </li>
 
-                <div class="menu-label">Telesales Event Setup</div>
+                <div class="menu-label">Setup</div>
                 <li class="nav-item">
                     <a href="{{ route('settings.index') }}" class="nav-link {{ request()->routeIs('settings.*') || request()->routeIs('events.packages.*') ? 'active' : '' }}">
                         <i class="bi bi-calendar-event"></i>
@@ -95,9 +113,12 @@
             <nav aria-label="breadcrumb">@yield('breadcrumb')</nav>
             <div class="dropdown">
                 <button class="btn btn-link text-dark text-decoration-none dropdown-toggle" data-bs-toggle="dropdown">
-                    <i class="bi bi-person-circle me-1"></i>{{ Auth::user()->name ?? 'Admin' }}
+                    <i class="bi bi-person-circle me-1"></i>{{ Auth::user()->name ?? 'User' }}
+                    <span class="badge bg-{{ Auth::user()->role === 'underwriter' ? 'dark' : 'secondary' }} role-badge ms-1">{{ strtoupper(Auth::user()->role) }}</span>
                 </button>
                 <ul class="dropdown-menu dropdown-menu-end">
+                    <li><span class="dropdown-item-text small text-muted">{{ Auth::user()->email }}</span></li>
+                    <li><hr class="dropdown-divider"></li>
                     <li>
                         <form action="{{ route('logout') }}" method="POST">
                             @csrf
@@ -110,8 +131,8 @@
 
         <main class="page-content">
             @if(session('success'))<div class="alert alert-dark alert-dismissible fade show"><i class="bi bi-check-circle me-2"></i>{{ session('success') }}<button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>@endif
-            @if(session('error'))<div class="alert alert-secondary alert-dismissible fade show"><i class="bi bi-exclamation-triangle me-2"></i>{{ session('error') }}<button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>@endif
-            @if(session('info'))<div class="alert alert-light alert-dismissible fade show border"><i class="bi bi-info-circle me-2"></i>{{ session('info') }}<button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>@endif
+            @if(session('error'))<div class="alert alert-danger alert-dismissible fade show"><i class="bi bi-exclamation-triangle me-2"></i>{{ session('error') }}<button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>@endif
+            @if(session('info'))<div class="alert alert-secondary alert-dismissible fade show"><i class="bi bi-info-circle me-2"></i>{{ session('info') }}<button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>@endif
             @yield('content')
         </main>
     </div>
